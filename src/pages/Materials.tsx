@@ -55,7 +55,7 @@ const Materials = () => {
     setUploading(true)
 
     const fileName = `${Date.now()}_${file.name}`
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('materials')
       .upload(fileName, file)
 
@@ -129,7 +129,7 @@ const Materials = () => {
       }
 
       const fileName = `${Date.now()}_${file.name}`
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('materials')
         .upload(fileName, file)
 
