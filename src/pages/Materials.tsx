@@ -119,21 +119,33 @@ const Materials = () => {
       return
     }
 
+    setUploading(true)
     const files = Array.from(e.dataTransfer.files)
+    console.log('Files to upload:', files)
+
     for (const file of files) {
       const fileExt = file.name.split('.').pop()?.toLowerCase()
       const allowedTypes = ['pdf', 'jpeg', 'jpg', 'ppt', 'pptx']
 
       if (!fileExt || !allowedTypes.includes(fileExt)) {
+        console.log('Skipping file with invalid extension:', fileExt)
         continue
       }
 
       const fileName = `${Date.now()}_${file.name}`
-      const { error: uploadError } = await supabase.storage
+      console.log('Uploading file:', fileName)
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('materials')
         .upload(fileName, file)
 
-      if (uploadError) continue
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        alert(`アップロードエラー: ${uploadError.message}`)
+        continue
+      }
+
+      console.log('Upload successful:', uploadData)
 
       const { data: { publicUrl } } = supabase.storage
         .from('materials')
@@ -146,11 +158,20 @@ const Materials = () => {
         file_type: fileExt === 'jpg' ? 'jpeg' : fileExt as Material['file_type']
       }
 
-      await supabase
+      const { data: insertData, error: insertError } = await supabase
         .from('materials')
         .insert([materialData])
+        .select()
+
+      if (insertError) {
+        console.error('Database insert error:', insertError)
+        alert(`データベースエラー: ${insertError.message}`)
+      } else {
+        console.log('Material added:', insertData)
+      }
     }
 
+    setUploading(false)
     fetchMaterials()
   }
 
