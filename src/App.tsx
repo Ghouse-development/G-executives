@@ -6,6 +6,7 @@ import TestPage from './pages/TestPage'
 import Categories from './pages/Categories'
 import Executives from './pages/Executives'
 import Progress from './pages/Progress'
+import QuestionGenerator from './pages/QuestionGenerator'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="categories" element={<Categories />} />
         <Route path="executives" element={<Executives />} />
         <Route path="progress" element={<Progress />} />
+        <Route path="generate" element={<QuestionGenerator />} />
       </Route>
     </Routes>
   )

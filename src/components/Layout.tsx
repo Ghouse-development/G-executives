@@ -4,6 +4,7 @@ const Layout = () => {
   const navItems = [
     { path: '/', label: 'ダッシュボード' },
     { path: '/materials', label: '教材管理' },
+    { path: '/generate', label: '問題生成' },
     { path: '/test', label: 'テスト' },
     { path: '/categories', label: 'カテゴリ管理' },
     { path: '/executives', label: '幹部管理' },
