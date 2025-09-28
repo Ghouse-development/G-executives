@@ -7,6 +7,9 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 console.log('Environment check:', {
   url: supabaseUrl ? 'Set' : 'Missing',
   key: supabaseAnonKey ? 'Set' : 'Missing',
+  urlValue: supabaseUrl ? '***' : undefined,
+  keyValue: supabaseAnonKey ? '***' : undefined,
+  allEnvKeys: Object.keys(import.meta.env),
   env: import.meta.env
 })
 
