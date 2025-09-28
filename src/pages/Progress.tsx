@@ -71,7 +71,7 @@ const Progress = () => {
   }
 
   const getLeaderboard = () => {
-    const leaderboard: { [key: string]: { name: string, totalScore: number, questionsAnswered: number } } = {}
+    const leaderboard: { [key: string]: { name: string, totalScore: number, questionsAnswered: number, department?: string, crossSkill?: number } } = {}
 
     progressData.forEach(progress => {
       const execId = progress.executive_id
@@ -80,8 +80,10 @@ const Progress = () => {
       if (!leaderboard[execId] && exec) {
         leaderboard[execId] = {
           name: exec.name,
+          department: exec.position,
           totalScore: 0,
-          questionsAnswered: 0
+          questionsAnswered: 0,
+          crossSkill: 0
         }
       }
 
@@ -97,6 +99,32 @@ const Progress = () => {
         accuracy: exec.questionsAnswered > 0 ? (exec.totalScore / exec.questionsAnswered) * 100 : 0
       }))
       .sort((a, b) => b.totalScore - a.totalScore)
+  }
+
+  const calculateCrossSkillScore = (executiveId: string) => {
+    const execData = progressData.filter(p => p.executive_id === executiveId)
+    const exec = executives.find(e => e.id === executiveId)
+    if (!exec) return 0
+
+    const departmentMap: { [key: string]: string } = {
+      '営業部長': '営業戦略',
+      'マーケティング部長': 'マーケティング戦略',
+      '財務部長': '財務管理',
+      '人事部長': '人事管理',
+      '技術部長': '技術戦略'
+    }
+
+    const ownCategory = departmentMap[exec.position]
+    const otherDepartmentProgress = execData.filter(p => {
+      const category = categories.find(c => c.id === p.category_id)
+      return category && category.name !== ownCategory
+    })
+
+    if (otherDepartmentProgress.length === 0) return 0
+
+    const totalQuestions = otherDepartmentProgress.reduce((sum, p) => sum + p.total_questions_answered, 0)
+    const correctAnswers = otherDepartmentProgress.reduce((sum, p) => sum + p.correct_answers, 0)
+    return totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0
   }
 
   return (
@@ -122,7 +150,7 @@ const Progress = () => {
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">リーダーボード</h2>
           <div className="space-y-3">
@@ -170,6 +198,40 @@ const Progress = () => {
                       className="bg-indigo-600 h-2 rounded-full"
                       style={{ width: `${accuracy}%` }}
                     ></div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">クロススキル分析</h2>
+          <div className="space-y-3">
+            {executives.slice(0, 5).map(exec => {
+              const crossSkill = calculateCrossSkillScore(exec.id)
+              const ownProgress = progressData.filter(p => p.executive_id === exec.id)
+              const totalQuestions = ownProgress.reduce((sum, p) => sum + p.total_questions_answered, 0)
+              const correctAnswers = ownProgress.reduce((sum, p) => sum + p.correct_answers, 0)
+              const overallScore = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0
+
+              return (
+                <div key={exec.id} className="p-3 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <div>
+                      <p className="font-medium text-gray-900">{exec.name}</p>
+                      <p className="text-xs text-gray-500">{exec.position}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className="text-gray-600">専門分野</p>
+                      <p className="font-semibold text-indigo-600">{overallScore.toFixed(1)}%</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">他部門理解</p>
+                      <p className="font-semibold text-green-600">{crossSkill.toFixed(1)}%</p>
+                    </div>
                   </div>
                 </div>
               )

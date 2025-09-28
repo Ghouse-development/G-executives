@@ -2,13 +2,20 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { Question, Executive, Category, TestSession } from '../types'
 
-const TestPage = () => {
+interface TestPageProps {
+  preSelectedExecutive?: Executive;
+  onBack?: () => void;
+}
+
+const TestPage = ({ preSelectedExecutive }: TestPageProps = {}) => {
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null)
   const [executives, setExecutives] = useState<Executive[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [selectedExecutive, setSelectedExecutive] = useState<string>('')
+  const [selectedExecutive, setSelectedExecutive] = useState<string>(preSelectedExecutive?.id || '')
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [testMode, setTestMode] = useState<'own' | 'other' | ''>('')
   const [userAnswer, setUserAnswer] = useState('')
   const [showAnswer, setShowAnswer] = useState(false)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
@@ -19,7 +26,44 @@ const TestPage = () => {
   useEffect(() => {
     fetchExecutives()
     fetchCategories()
-  }, [])
+    if (preSelectedExecutive) {
+      setSelectedExecutive(preSelectedExecutive.id)
+      setSelectedDepartment(preSelectedExecutive.department)
+    }
+  }, [preSelectedExecutive])
+
+  useEffect(() => {
+    if (selectedDepartment && testMode) {
+      filterCategories()
+    }
+  }, [selectedDepartment, testMode])
+
+  const filterCategories = async () => {
+    const departmentToCategory: { [key: string]: string } = {
+      '営業部': '営業戦略',
+      'マーケティング部': 'マーケティング戦略',
+      '財務部': '財務管理',
+      '人事部': '人事管理',
+      '技術部': '技術戦略'
+    }
+
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name')
+
+    if (!error && data) {
+      if (testMode === 'own') {
+        // 自部門のカテゴリのみ
+        const ownCategory = departmentToCategory[selectedDepartment]
+        setCategories(data.filter(cat => cat.name === ownCategory))
+      } else if (testMode === 'other') {
+        // 他部門のカテゴリのみ
+        const ownCategory = departmentToCategory[selectedDepartment]
+        setCategories(data.filter(cat => cat.name !== ownCategory && departmentToCategory[Object.keys(departmentToCategory).find(dept => departmentToCategory[dept] === cat.name) || '']))
+      }
+    }
+  }
 
   const fetchExecutives = async () => {
     const { data, error } = await supabase
@@ -166,7 +210,13 @@ const TestPage = () => {
               </label>
               <select
                 value={selectedExecutive}
-                onChange={(e) => setSelectedExecutive(e.target.value)}
+                onChange={(e) => {
+                  setSelectedExecutive(e.target.value)
+                  const exec = executives.find(ex => ex.id === e.target.value)
+                  if (exec) {
+                    setSelectedDepartment(exec.position.split('長')[0] + '部')
+                  }
+                }}
                 className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
               >
                 <option value="">選択してください</option>
@@ -178,27 +228,61 @@ const TestPage = () => {
               </select>
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                カテゴリを選択
-              </label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
-              >
-                <option value="">選択してください</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {selectedDepartment && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  テストモード
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setTestMode('own')}
+                    className={`px-4 py-2 rounded-md border ${testMode === 'own' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 border-gray-300'}`}
+                  >
+                    自部門知識
+                  </button>
+                  <button
+                    onClick={() => setTestMode('other')}
+                    className={`px-4 py-2 rounded-md border ${testMode === 'other' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 border-gray-300'}`}
+                  >
+                    他部門理解度
+                  </button>
+                </div>
+                {testMode === 'other' && (
+                  <p className="mt-2 text-xs text-gray-500">
+                    他部門の知識をテストして、クロススキル評価を行います。
+                  </p>
+                )}
+              </div>
+            )}
+
+            {testMode && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  カテゴリを選択
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                >
+                  <option value="">選択してください</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <button
               onClick={startTest}
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none"
+              disabled={!selectedExecutive || !selectedCategory || !testMode}
+              className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none ${
+                selectedExecutive && selectedCategory && testMode
+                  ? 'bg-indigo-600 hover:bg-indigo-700'
+                  : 'bg-gray-400 cursor-not-allowed'
+              }`}
             >
               テスト開始
             </button>

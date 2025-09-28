@@ -4,14 +4,13 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// デバッグ用ログ
-console.log('Environment check:', {
-  url: supabaseUrl ? 'Set' : 'Missing',
-  key: supabaseAnonKey ? 'Set' : 'Missing',
-  mode: import.meta.env.MODE,
-  isProd: import.meta.env.PROD,
-  isDev: import.meta.env.DEV
-})
+// デバッグ用ログ（開発環境のみ）
+if (import.meta.env.DEV) {
+  console.log('Supabase configured:', {
+    url: supabaseUrl ? '✓' : '✗ (using fallback)',
+    key: supabaseAnonKey ? '✓' : '✗ (using fallback)'
+  })
+}
 
 // 環境変数が設定されていない場合は、一時的にハードコードされた値を使用
 // ⚠️ 注意: これは開発用の一時的な解決策です

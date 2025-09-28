@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Category, Material, Question } from '../types'
+import { Category, Material } from '../types'
 
 const QuestionGenerator = () => {
   const [categories, setCategories] = useState<Category[]>([])
@@ -83,7 +83,7 @@ const QuestionGenerator = () => {
   }
 
   const saveQuestion = async (questionData: any, index: number) => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('questions')
       .insert([questionData])
       .select()

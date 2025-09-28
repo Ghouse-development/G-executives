@@ -3,11 +3,11 @@ import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Materials from './pages/Materials'
 import TestPage from './pages/TestPage'
-import Categories from './pages/Categories'
 import Executives from './pages/Executives'
-import Progress from './pages/Progress'
-import QuestionGenerator from './pages/QuestionGenerator'
-import AutoQuestionGenerator from './pages/AutoQuestionGenerator'
+import TestSelection from './pages/TestSelection'
+import TestTypeSelection from './pages/TestTypeSelection'
+import Documents from './pages/Documents'
+import ComprehensiveTest from './pages/ComprehensiveTest'
 
 function App() {
   return (
@@ -16,11 +16,11 @@ function App() {
         <Route index element={<Dashboard />} />
         <Route path="materials" element={<Materials />} />
         <Route path="test" element={<TestPage />} />
-        <Route path="categories" element={<Categories />} />
+        <Route path="test-type" element={<TestTypeSelection />} />
+        <Route path="test-selection" element={<TestSelection />} />
         <Route path="executives" element={<Executives />} />
-        <Route path="progress" element={<Progress />} />
-        <Route path="generate" element={<QuestionGenerator />} />
-        <Route path="auto-generate" element={<AutoQuestionGenerator />} />
+        <Route path="documents" element={<Documents />} />
+        <Route path="comprehensive-test" element={<ComprehensiveTest />} />
       </Route>
     </Routes>
   )

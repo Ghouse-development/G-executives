@@ -8,7 +8,6 @@ const Executives = () => {
   const [editingExecutive, setEditingExecutive] = useState<Executive | null>(null)
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     position: '',
     department: ''
   })
@@ -54,7 +53,7 @@ const Executives = () => {
   }
 
   const handleDelete = async (id: string) => {
-    if (confirm('この幹部を削除しますか？関連する学習記録も削除されます。')) {
+    if (confirm('このメンバーを削除しますか？関連する学習記録も削除されます。')) {
       const { error } = await supabase
         .from('executives')
         .delete()
@@ -71,13 +70,12 @@ const Executives = () => {
       setEditingExecutive(executive)
       setFormData({
         name: executive.name,
-        email: executive.email,
         position: executive.position,
         department: executive.department
       })
     } else {
       setEditingExecutive(null)
-      setFormData({ name: '', email: '', position: '', department: '' })
+      setFormData({ name: '', position: '', department: '' })
     }
     setIsModalOpen(true)
   }
@@ -85,22 +83,22 @@ const Executives = () => {
   const closeModal = () => {
     setIsModalOpen(false)
     setEditingExecutive(null)
-    setFormData({ name: '', email: '', position: '', department: '' })
+    setFormData({ name: '', position: '', department: '' })
   }
 
   return (
-    <div className="px-4 py-6 sm:px-0">
+    <div className="px-4 py-6 sm:px-0 dark:bg-gray-900 min-h-screen">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
-          <h1 className="text-xl font-semibold text-gray-900">幹部管理</h1>
-          <p className="mt-2 text-sm text-gray-700">Gハウス幹部の情報を管理します</p>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">メンバー管理</h1>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">Gハウスメンバーの情報を管理します</p>
         </div>
         <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
           <button
             onClick={() => openModal()}
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700"
+            className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 dark:bg-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 dark:hover:bg-indigo-600"
           >
-            新規幹部追加
+            新規メンバー追加
           </button>
         </div>
       </div>
@@ -109,39 +107,37 @@ const Executives = () => {
         <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
             <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">名前</th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">メールアドレス</th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">役職</th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">部門</th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">登録日</th>
+                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">名前</th>
+                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">部門</th>
+                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">役職</th>
+                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">登録日</th>
                     <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                       <span className="sr-only">操作</span>
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
                   {executives.map((executive) => (
                     <tr key={executive.id}>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">{executive.name}</td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{executive.email}</td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{executive.position}</td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{executive.department}</td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 dark:text-gray-100">{executive.name}</td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">{executive.department}</td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">{executive.position}</td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
                         {new Date(executive.created_at).toLocaleDateString()}
                       </td>
                       <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                         <button
                           onClick={() => openModal(executive)}
-                          className="text-indigo-600 hover:text-indigo-900 mr-4"
+                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-4"
                         >
                           編集
                         </button>
                         <button
                           onClick={() => handleDelete(executive.id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                         >
                           削除
                         </button>
@@ -163,7 +159,7 @@ const Executives = () => {
               <form onSubmit={handleSubmit}>
                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    {editingExecutive ? '幹部情報編集' : '新規幹部登録'}
+                    {editingExecutive ? 'メンバー情報編集' : '新規メンバー登録'}
                   </h3>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -179,13 +175,13 @@ const Executives = () => {
                   </div>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      メールアドレス
+                      部門
                     </label>
                     <input
-                      type="email"
+                      type="text"
                       required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      value={formData.department}
+                      onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                       className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                     />
                   </div>
@@ -198,18 +194,6 @@ const Executives = () => {
                       required
                       value={formData.position}
                       onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      部門
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.department}
-                      onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                       className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                     />
                   </div>

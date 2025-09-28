@@ -14,7 +14,16 @@
       "Bash(npm run build:*)",
       "Bash(npx tsc:*)",
       "Bash(npm uninstall:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(npm run lint)",
+      "Bash(del:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(dir:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(winget install:*)",
+      "Bash(nvm list:*)",
+      "Bash(nvm install:*)",
+      "Bash(nvm use:*)"
     ],
     "deny": [],
     "ask": []
