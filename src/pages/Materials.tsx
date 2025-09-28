@@ -54,7 +54,16 @@ const Materials = () => {
 
     setUploading(true)
 
-    const fileName = `${Date.now()}_${file.name}`
+    // ファイル名を英数字に変換（日本語ファイル名対応）
+    const timestamp = Date.now()
+    const safeFileName = file.name
+      .replace(/[^\w\s.-]/g, '') // 英数字、スペース、ドット、ハイフン以外を削除
+      .replace(/\s+/g, '_') // スペースをアンダースコアに変換
+
+    // 拡張子を保持し、ファイル名が空の場合はデフォルト名を使用
+    const baseName = safeFileName.replace(/\.[^/.]+$/, '') || 'file'
+    const fileName = `${timestamp}_${baseName}.${fileExt}`
+
     const { error: uploadError } = await supabase.storage
       .from('materials')
       .upload(fileName, file)
@@ -71,7 +80,7 @@ const Materials = () => {
 
     const materialData = {
       category_id: selectedCategory,
-      title: file.name.replace(/\.[^/.]+$/, ''),
+      title: file.name.replace(/\.[^/.]+$/, ''), // 元のファイル名をタイトルとして保持
       file_url: publicUrl,
       file_type: fileExt === 'jpg' ? 'jpeg' : fileExt as Material['file_type']
     }
@@ -132,8 +141,17 @@ const Materials = () => {
         continue
       }
 
-      const fileName = `${Date.now()}_${file.name}`
-      console.log('Uploading file:', fileName)
+      // ファイル名を英数字に変換（日本語ファイル名対応）
+      const timestamp = Date.now()
+      const safeFileName = file.name
+        .replace(/[^\w\s.-]/g, '') // 英数字、スペース、ドット、ハイフン以外を削除
+        .replace(/\s+/g, '_') // スペースをアンダースコアに変換
+
+      // 拡張子を保持し、ファイル名が空の場合はデフォルト名を使用
+      const baseName = safeFileName.replace(/\.[^/.]+$/, '') || 'file'
+      const fileName = `${timestamp}_${baseName}.${fileExt}`
+      console.log('Original name:', file.name)
+      console.log('Safe name:', fileName)
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('materials')
@@ -153,7 +171,7 @@ const Materials = () => {
 
       const materialData = {
         category_id: selectedCategory,
-        title: file.name.replace(/\.[^/.]+$/, ''),
+        title: file.name.replace(/\.[^/.]+$/, ''), // 元のファイル名をタイトルとして保持
         file_url: publicUrl,
         file_type: fileExt === 'jpg' ? 'jpeg' : fileExt as Material['file_type']
       }
