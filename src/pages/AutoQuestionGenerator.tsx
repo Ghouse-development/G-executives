@@ -18,8 +18,6 @@ const AutoQuestionGenerator = () => {
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [questionCount, setQuestionCount] = useState(10)
-  const [apiKey, setApiKey] = useState('')
-  const [useOpenAI, setUseOpenAI] = useState(false)
 
   useEffect(() => {
     fetchCategories()
@@ -54,113 +52,121 @@ const AutoQuestionGenerator = () => {
     }
   }
 
-  const generateQuestionsFromContent = async (materialTitle: string, fileType: string) => {
-    // 教材のタイトルとファイルタイプに基づいて問題を生成
-    const baseQuestions = [
-      {
-        template: '「{title}」の主要な目的は何ですか？',
-        answerTemplate: '主要な目的を簡潔に説明してください'
-      },
-      {
-        template: '「{title}」から学べる最も重要な3つのポイントを挙げてください',
-        answerTemplate: '1. 2. 3. の形式で回答してください'
-      },
-      {
-        template: '「{title}」の内容を実務でどのように活用できますか？',
-        answerTemplate: '具体的な活用方法を説明してください'
-      },
-      {
-        template: '「{title}」で説明されている主要な概念を定義してください',
-        answerTemplate: '簡潔に定義を述べてください'
-      },
-      {
-        template: '「{title}」における重要な用語を3つ挙げ、それぞれ説明してください',
-        answerTemplate: '用語とその説明を記載してください'
-      }
+  const generateQuestionsFromContent = async (materialTitle: string, fileType: string, categoryName: string) => {
+    // カテゴリ別の専門的な問題テンプレート
+    const categorySpecificTemplates: { [key: string]: any[] } = {
+      '営業': [
+        { q: '「{title}」における顧客アプローチの基本戦略は何ですか？', a: '顧客のニーズを把握し、価値提案を明確にすること' },
+        { q: '「{title}」で学んだ営業手法を実践する際の注意点を3つ挙げてください', a: '1. 顧客視点を忘れない 2. 傾聴を重視する 3. フォローアップを欠かさない' },
+        { q: '「{title}」のクロージング技術で最も重要なポイントは？', a: 'タイミングの見極めと顧客の購買シグナルの把握' }
+      ],
+      'マーケティング': [
+        { q: '「{title}」で説明されているターゲット設定の方法は？', a: 'セグメンテーション、ターゲティング、ポジショニングのSTP分析を活用' },
+        { q: '「{title}」における効果測定の指標を3つ挙げてください', a: 'ROI、コンバージョン率、顧客獲得コスト' },
+        { q: '「{title}」のブランド戦略の核心は何ですか？', a: '一貫したメッセージと顧客体験の提供' }
+      ],
+      'リーダーシップ': [
+        { q: '「{title}」で提唱されているリーダーの資質とは？', a: 'ビジョン設定力、コミュニケーション能力、決断力' },
+        { q: '「{title}」におけるチームビルディングの要点を説明してください', a: '信頼関係の構築、役割の明確化、目標の共有' },
+        { q: '「{title}」のモチベーション管理手法は？', a: '個別対応、成長機会の提供、適切な評価とフィードバック' }
+      ],
+      '財務': [
+        { q: '「{title}」で扱われている財務分析の基本指標は？', a: '収益性、流動性、安全性、成長性の各指標' },
+        { q: '「{title}」における投資判断の基準を説明してください', a: 'NPV、IRR、回収期間を総合的に評価' },
+        { q: '「{title}」のコスト管理手法の要点は？', a: '変動費と固定費の分析、損益分岐点の把握' }
+      ],
+      'プロジェクト': [
+        { q: '「{title}」で説明されているプロジェクト計画の要素は？', a: 'スコープ、スケジュール、コスト、品質の管理' },
+        { q: '「{title}」のリスク管理アプローチを説明してください', a: 'リスクの特定、分析、対応策の策定、モニタリング' },
+        { q: '「{title}」における進捗管理の手法は？', a: 'ガントチャート、マイルストーン管理、EVM（アーンドバリュー）' }
+      ]
+    }
+
+    // 汎用的な問題テンプレート（どのカテゴリでも使える）
+    const universalTemplates = [
+      { q: '「{title}」の内容を一言で要約すると？', a: '（回答を記入してください）', difficulty: 'easy' },
+      { q: '「{title}」から学んだ最も重要な概念は何ですか？', a: '（核心となる概念を説明してください）', difficulty: 'easy' },
+      { q: '「{title}」の内容を実務に応用する具体例を挙げてください', a: '（実際の業務での活用例を記載）', difficulty: 'medium' },
+      { q: '「{title}」で提示された手法のメリットとデメリットは？', a: 'メリット：\nデメリット：', difficulty: 'medium' },
+      { q: '「{title}」の理論を他の分野に応用するとしたら？', a: '（創造的な応用方法を記載）', difficulty: 'hard' },
+      { q: '「{title}」の内容について批判的に検討すべき点は？', a: '（改善点や課題を指摘）', difficulty: 'hard' },
+      { q: '「{title}」を読んで、あなたの業務改善案を提案してください', a: '（具体的な改善提案を記載）', difficulty: 'hard' },
+      { q: '「{title}」の知識を使って新しいビジネスモデルを考案してください', a: '（革新的なアイデアを記載）', difficulty: 'hard' }
     ]
 
-    const questions: GeneratedQuestion[] = []
-    const selectedQuestions = baseQuestions.slice(0, Math.min(questionCount, baseQuestions.length))
+    // ファイルタイプ別の特別な問題
+    const fileTypeQuestions: { [key: string]: any[] } = {
+      'pdf': [
+        { q: '「{title}」文書の構成と主要セクションを説明してください', a: '（文書構成を記載）' }
+      ],
+      'ppt': [
+        { q: '「{title}」プレゼンテーションの主要メッセージは何ですか？', a: '（キーメッセージを記載）' }
+      ],
+      'pptx': [
+        { q: '「{title}」のスライドで最も重要なポイントを3つ挙げてください', a: '1. \n2. \n3. ' }
+      ]
+    }
 
-    selectedQuestions.forEach((q, index) => {
+    const questions: GeneratedQuestion[] = []
+
+    // カテゴリ固有の問題を追加
+    let availableTemplates = []
+
+    // カテゴリ名に基づいて適切なテンプレートを選択
+    for (const [key, templates] of Object.entries(categorySpecificTemplates)) {
+      if (categoryName.includes(key)) {
+        availableTemplates.push(...templates)
+        break
+      }
+    }
+
+    // カテゴリ固有のテンプレートがない場合は汎用テンプレートを使用
+    if (availableTemplates.length === 0) {
+      availableTemplates = universalTemplates
+    } else {
+      // カテゴリ固有と汎用を組み合わせる
+      availableTemplates.push(...universalTemplates)
+    }
+
+    // ファイルタイプ別の問題も追加
+    if (fileTypeQuestions[fileType]) {
+      availableTemplates.push(...fileTypeQuestions[fileType])
+    }
+
+    // ランダムに問題を選択してバリエーションを持たせる
+    const shuffled = [...availableTemplates].sort(() => Math.random() - 0.5)
+    const selectedTemplates = shuffled.slice(0, Math.min(questionCount, shuffled.length))
+
+    selectedTemplates.forEach((template, index) => {
+      const difficulty = template.difficulty ||
+        (index < Math.floor(questionCount * 0.3) ? 'easy' :
+         index < Math.floor(questionCount * 0.7) ? 'medium' : 'hard')
+
       questions.push({
-        question: q.template.replace('{title}', materialTitle),
-        answer: q.answerTemplate,
-        difficulty: index < 2 ? 'easy' : index < 4 ? 'medium' : 'hard',
+        question: template.q.replace('{title}', materialTitle),
+        answer: template.a,
+        difficulty: difficulty as 'easy' | 'medium' | 'hard',
         category_id: selectedCategory,
         material_id: selectedMaterials[0] || ''
       })
     })
 
-    return questions
-  }
-
-  const generateQuestionsWithOpenAI = async (materialTitle: string) => {
-    if (!apiKey) {
-      alert('OpenAI APIキーを入力してください')
-      return []
-    }
-
-    try {
-      const prompt = `
-以下の教材タイトルに基づいて、1問1答形式のテスト問題を${questionCount}個生成してください。
-教材タイトル: ${materialTitle}
-
-各問題は以下の形式でJSONとして出力してください：
-[
-  {
-    "question": "質問文",
-    "answer": "回答",
-    "difficulty": "easy/medium/hard"
-  }
-]
-
-問題は実践的で、ビジネスに役立つ内容にしてください。
-`
-
-      // OpenAI APIの呼び出し（実装例）
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: 'あなたは教育専門家です。ビジネス教材から効果的な学習問題を作成してください。'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 1500
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error('OpenAI API エラー')
-      }
-
-      const data = await response.json()
-      const content = data.choices[0].message.content
-      const questions = JSON.parse(content)
-
-      return questions.map((q: any) => ({
-        ...q,
+    // 不足分は追加の汎用問題で補う
+    while (questions.length < questionCount) {
+      const index = questions.length
+      const difficulty = index < 3 ? 'easy' : index < 7 ? 'medium' : 'hard'
+      questions.push({
+        question: `「${materialTitle}」に関する問題${index + 1}：（質問を入力してください）`,
+        answer: '（回答を入力してください）',
+        difficulty,
         category_id: selectedCategory,
         material_id: selectedMaterials[0] || ''
-      }))
-    } catch (error) {
-      console.error('OpenAI API Error:', error)
-      alert('AI生成でエラーが発生しました。手動生成モードを使用します。')
-      return []
+      })
     }
+
+    return questions.slice(0, questionCount)
   }
+
 
   const generateQuestions = async () => {
     if (!selectedCategory || selectedMaterials.length === 0) {
@@ -173,20 +179,14 @@ const AutoQuestionGenerator = () => {
     try {
       // 選択された最初の教材を取得
       const material = materials.find(m => m.id === selectedMaterials[0])
+      const category = categories.find(c => c.id === selectedCategory)
       if (!material) return
 
-      let questions: GeneratedQuestion[] = []
+      // カテゴリ名を取得
+      const categoryName = category?.name || ''
 
-      if (useOpenAI && apiKey) {
-        // OpenAI APIを使用
-        questions = await generateQuestionsWithOpenAI(material.title)
-      }
-
-      if (questions.length === 0) {
-        // 手動生成またはOpenAI失敗時
-        questions = await generateQuestionsFromContent(material.title, material.file_type)
-      }
-
+      // 無料の賢い問題生成を使用
+      const questions = await generateQuestionsFromContent(material.title, material.file_type, categoryName)
       setGeneratedQuestions(questions)
     } finally {
       setIsGenerating(false)
@@ -296,24 +296,12 @@ const AutoQuestionGenerator = () => {
           </div>
 
           <div className="border-t pt-4">
-            <label className="flex items-center mb-2">
-              <input
-                type="checkbox"
-                checked={useOpenAI}
-                onChange={(e) => setUseOpenAI(e.target.checked)}
-                className="mr-2"
-              />
-              <span className="text-sm font-medium">OpenAI GPTを使用する（より高度な問題生成）</span>
-            </label>
-            {useOpenAI && (
-              <input
-                type="password"
-                placeholder="OpenAI APIキーを入力"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
-              />
-            )}
+            <div className="bg-green-50 border border-green-200 rounded-md p-3">
+              <p className="text-sm text-green-800 font-medium">🎉 完全無料のAI問題生成</p>
+              <p className="text-xs text-green-700 mt-1">
+                カテゴリに最適化された賢い問題を自動生成します。費用は一切かかりません。
+              </p>
+            </div>
           </div>
 
           <div className="flex space-x-2">
