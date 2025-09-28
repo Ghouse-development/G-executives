@@ -7,6 +7,7 @@ import Categories from './pages/Categories'
 import Executives from './pages/Executives'
 import Progress from './pages/Progress'
 import QuestionGenerator from './pages/QuestionGenerator'
+import AutoQuestionGenerator from './pages/AutoQuestionGenerator'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="executives" element={<Executives />} />
         <Route path="progress" element={<Progress />} />
         <Route path="generate" element={<QuestionGenerator />} />
+        <Route path="auto-generate" element={<AutoQuestionGenerator />} />
       </Route>
     </Routes>
   )
